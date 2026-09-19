@@ -3,283 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Devices Tycoon - MEGA V4</title>
-    
+    <title>Devices Tycoon - Landscape Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Ubuntu', sans-serif; }
-        body { background: #0d1117; color: white; overflow-x: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Ubuntu', sans-serif; user-select: none; }
+        body { background: #07090e; color: white; overflow: hidden; width: 100vw; height: 100vh; }
 
-        .screen { display: none; min-height: 100vh; padding-top: 60px; padding-bottom: 90px; width: 100%; }
+        /* PAKSA LAYAR LANDSCAPE / MIRING */
+        #game-wrapper {
+            width: 100vh; height: 100vw;
+            position: absolute; top: 100vw; left: 0;
+            transform: rotate(-90deg); transform-origin: top left;
+            overflow-y: auto; background: #0f172a; display: flex; flex-direction: column;
+        }
+
+        .screen { display: none; flex: 1; padding: 60px 20px 20px 20px; width: 100%; height: 100%; overflow-y: auto; }
         .screen.active { display: block; }
 
-        #setup-screen { display: none; background: radial-gradient(circle at center, #005c97, #131b26); min-height: 100vh; text-align: center; padding: 20px 10px 100px 10px; overflow-y: auto; }
-        #setup-screen.active { display: block; }
+        /* SETUP SCREEN */
+        #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #005c97, #07090e); height: 100vw; position: absolute; top:0; left:0; z-index: 1000; }
+        .setup-input { padding: 10px; width: 300px; background: rgba(0,0,0,0.5); border: 2px solid #4facfe; color: white; border-radius: 6px; text-align: center; font-size: 16px; margin: 10px 0; }
+        .country-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 400px; }
+        .country-card { background: #1a4a76; padding: 8px; border-radius: 6px; text-align: center; cursor: pointer; font-size: 12px; border: 2px solid transparent; }
+        .country-card.selected { background: #3a7bd5; border-color: white; font-weight: bold; }
+        .start-btn { background: #f5af19; color: black; border: none; padding: 12px 30px; font-weight: bold; border-radius: 20px; margin-top: 15px; cursor: pointer; font-size: 16px; }
 
-        .setup-header h1 { font-family: 'Teko', sans-serif; font-size: 42px; color: #fff; letter-spacing: 2px; margin-top: 10px; }
-        .setup-header p { color: #87ceeb; font-size: 14px; border-bottom: 2px solid #87ceeb; padding-bottom: 3px; display: inline-block; }
-        .input-box { margin: 15px auto; width: 90%; max-width: 400px; }
-        .setup-input { width: 100%; padding: 12px; background: rgba(0,0,0,0.4); border: 2px solid #4facfe; color: white; font-size: 16px; border-radius: 8px; text-align: center; outline: none; }
+        /* HUD TOP & BOTTOM */
+        .hud-top { position: fixed; top: 0; left: 0; width: 100vh; height: 50px; background: rgba(10,25,45,0.95); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 500; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+        .hud-bottom { position: fixed; bottom: 0; left: 0; width: 100vh; height: 50px; background: rgba(10,25,45,0.95); display: flex; justify-content: space-around; align-items: center; z-index: 500; border-top: 1px solid rgba(255,255,255,0.1); }
+        .hud-icon { color: #6a8caf; font-size: 18px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .hud-icon.active, .hud-icon:hover { color: white; text-shadow: 0 0 8px #4facfe; }
+
+        /* KONTROL KECEPATAN WAKTU */
+        .time-controls { display: flex; gap: 5px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 20px; border: 1px solid #334155; }
+        .speed-btn { background: #334155; color: white; border: none; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .speed-btn.active { background: #2563eb; }
+
+        /* DASHBOARD & STUDIO */
+        .dash-card { background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #4facfe; }
+        .log-box { background: rgba(0,0,0,0.6); height: 120px; overflow-y: auto; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; color: #a3e635; border: 1px solid #334155; }
         
-        .country-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 95%; max-width: 450px; margin: 10px auto; }
-        .country-card { background: #1a4a76; border: 2px solid transparent; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99; position: relative; }
-        .country-card.selected { background: #3a7bd5; border-color: #fff; transform: scale(1.03); font-weight: bold; box-shadow: 0 0 12px rgba(58,123,213,0.8); }
-        .start-btn { background: linear-gradient(90deg, #f5af19, #f12711); color: white; border: none; padding: 14px 40px; font-size: 18px; font-weight: bold; border-radius: 30px; margin: 20px 0 40px 0; cursor: pointer; position: relative; z-index: 99; box-shadow: 0 5px 20px rgba(241, 39, 17, 0.5); display: inline-block; }
-        .start-btn:active { transform: scale(0.95); }
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .studio-panel { background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+        .studio-panel label { display: block; font-size: 11px; color: #94a3b8; margin-top: 8px; }
+        .studio-panel select, .studio-panel input { width: 100%; padding: 6px; background: #0f172a; border: 1px solid #4facfe; color: white; border-radius: 4px; font-size: 12px; }
 
-        .hud-top { position: fixed; top: 0; left: 0; width: 100%; height: 55px; background: rgba(10,25,45,0.95); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 11px; font-weight: bold; z-index: 500; border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); }
-        .hud-top .hud-item { display: flex; flex-direction: column; align-items: center; color: #b0c4de; }
-        .hud-top .hud-val { font-size: 13px; }
-        .val-money { color: #4facfe; } .val-rp { color: #f5af19; } .val-hype { color: #ff5252; }
-
-        .hud-bottom { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: rgba(10,25,45,0.98); display: flex; justify-content: space-around; align-items: center; z-index: 500; border-top: 1px solid rgba(255,255,255,0.1); }
-        .hud-icon { color: #6a8caf; font-size: 22px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-        .hud-icon span { font-size: 10px; font-weight: bold; }
-        .hud-icon.active, .hud-icon:active { color: white; transform: translateY(-3px); }
-
-        #dashboard-screen { padding-left: 15px; padding-right: 15px; background: #0f172a; }
-        .dash-card { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4facfe; }
-        .dash-card h3 { color: #4facfe; margin-bottom: 8px; font-size: 15px; }
-        .log-box { background: rgba(0,0,0,0.6); width: 100%; height: 160px; overflow-y: auto; padding: 12px; border: 1px solid #334155; border-radius: 8px; font-size: 12px; font-family: monospace; color: #a3e635; }
-
-        .studio-container { width: 95%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
-        .device-preview-box { background: #1e293b; padding: 15px; border-radius: 12px; display: flex; justify-content: center; border: 1px solid #334155; }
-        .device-mockup { width: 100px; height: 200px; background: linear-gradient(135deg, #ff758c, #ff7eb3); border-radius: 16px; position: relative; }
-        .device-screen-inner { position: absolute; top: 3%; left: 3%; right: 3%; bottom: 3%; background: #050505; border-radius: 12px; }
-        
-        .studio-controls { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
-        .studio-controls label { display: block; font-size: 12px; color: #b0c4de; margin-top: 10px; margin-bottom: 3px; font-weight: bold; }
-        .studio-controls select, .studio-controls input[type=text], .studio-controls input[type=number] { width: 100%; padding: 9px; background: #0f172a; border: 1px solid #4facfe; color: white; border-radius: 6px; outline: none; font-size: 14px; }
-        .slider-group { display: flex; gap: 10px; align-items: center; }
-        .slider-group input[type=range] { flex: 1; }
-        .btn-publish { background: linear-gradient(90deg, #10b981, #059669); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: #1a2a40; width: 92%; max-width: 450px; max-height: 85vh; overflow-y: auto; padding: 18px; border-radius: 12px; border: 2px solid #4facfe; position: relative; }
-        .close-btn { position: absolute; top: 12px; right: 18px; color: #ff5252; font-size: 26px; cursor: pointer; font-weight: bold; }
-        
-        .list-item { background: rgba(0,0,0,0.4); padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #4facfe; font-size: 13px; }
-        .btn-action { background: #4facfe; color: #000; border: none; padding: 7px 10px; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 11px; }
-        .btn-action:disabled { background: #555; color: #888; cursor: not-allowed; }
-
-        .tab-riset-container { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; }
-        .tab-riset { background: #334155; padding: 7px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
-        .tab-riset.active { background: #4facfe; color: black; font-weight: bold; }
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100vh; height: 100vw; background: rgba(0,0,0,0.8); z-index: 999; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-box { background: #1a2a40; width: 500px; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 8px; border: 2px solid #4facfe; position: relative; }
+        .list-item { background: rgba(0,0,0,0.4); padding: 10px; margin-bottom: 6px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-left: 3px solid #4facfe; }
+        .btn-action { background: #4facfe; color: black; border: none; padding: 5px 10px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .btn-action:disabled { background: #444; color: #888; }
     </style>
 </head>
 
+
 <body>
-    <!-- SCREEN 1: SETUP -->
-    <div id="setup-screen" class="screen active">
-        <div class="setup-header">
-            <h1>COMPANY SETUP</h1>
-            <p>Devices Tycoon Web V4</p>
+    <div id="game-wrapper">
+        <!-- SETUP AWAL -->
+        <div id="setup-screen">
+            <h1 style="font-family:'Teko'; font-size:40px; color:#fff;">COMPANY SETUP</h1>
+            <input type="text" id="input-company" class="setup-input" value="Apex Tech">
+            <h3 style="font-size:14px; margin-bottom:5px;">PILIH NEGARA ASAL</h3>
+            <div class="country-grid">
+                <div class="country-card selected" onclick="pilihNegara(this, 'Indonesia', '🇮🇩')">🇮🇩 Indonesia</div>
+                <div class="country-card" onclick="pilihNegara(this, 'USA', '🇺🇸')">🇺🇸 USA</div>
+                <div class="country-card" onclick="pilihNegara(this, 'Japan', '🇯🇵')">🇯🇵 Japan</div>
+                <div class="country-card" onclick="pilihNegara(this, 'Korea', '🇰🇷')">🇰🇷 Korea</div>
+                <div class="country-card" onclick="pilihNegara(this, 'China', '🇨🇳')">🇨🇳 China</div>
+                <div class="country-card" onclick="pilihNegara(this, 'Germany', '🇩🇪')">🇩🇪 Germany</div>
+            </div>
+            <button class="start-btn" onclick="mulaiGame()">MULAI GAME</button>
         </div>
-        <div class="input-box">
-            <input type="text" id="input-company" class="setup-input" placeholder="Nama Perusahaan..." value="TechIndo">
-        </div>
-        <h3 style="color: white; font-size: 14px; margin-bottom:8px;">PILIH NEGARA ASAL</h3>
-        <div class="country-grid">
-            <div class="country-card selected" onclick="pilihNegara(this, 'Indonesia', '🇮🇩')"><span style="font-size:20px;">🇮🇩</span><span>Indonesia</span></div>
-            <div class="country-card" onclick="pilihNegara(this, 'USA', '🇺🇸')"><span style="font-size:20px;">🇺🇸</span><span>USA</span></div>
-            <div class="country-card" onclick="pilihNegara(this, 'Japan', '🇯🇵')"><span style="font-size:20px;">🇯🇵</span><span>Japan</span></div>
-            <div class="country-card" onclick="pilihNegara(this, 'South Korea', '🇰🇷')"><span style="font-size:20px;">🇰🇷</span><span>Korea</span></div>
-            <div class="country-card" onclick="pilihNegara(this, 'China', '🇨🇳')"><span style="font-size:20px;">🇨🇳</span><span>China</span></div>
-            <div class="country-card" onclick="pilihNegara(this, 'Germany', '🇩🇪')"><span style="font-size:20px;">🇩🇪</span><span>Germany</span></div>
-        </div>
-        <button class="start-btn" onclick="mulaiGame()">MULAI GAME!</button>
-    </div>
 
-    <!-- HUD -->
-    <div id="global-hud" style="display: none;">
-        <div class="hud-top">
-            <div class="hud-item"><span>Uang</span><span class="hud-val val-money" id="ui-money">$2,000,000</span></div>
-            <div class="hud-item"><span>Riset</span><span class="hud-val val-rp" id="ui-rp">100</span></div>
-            <div class="hud-item"><span>Hype</span><span class="hud-val val-hype" id="ui-hype">0%</span></div>
-            <div class="hud-item"><span>Fans</span><span class="hud-val" id="ui-fans" style="color:#10b981;">0</span></div>
-            <div class="hud-item"><span>Tanggal</span><span class="hud-val" id="ui-date" style="color:white;">01/2015</span></div>
+        <!-- HUD ATAS & BAWAH -->
+        <div class="hud-top" id="global-hud" style="display:none;">
+            <div>💵 <span id="ui-money" style="color:#4facfe; font-weight:bold;">$3,000,000</span></div>
+            <div>🧪 <span id="ui-rp" style="color:#f5af19; font-weight:bold;">0 RP</span></div>
+            <div>🔥 <span id="ui-hype" style="color:#ff5252; font-weight:bold;">0%</span></div>
+            <div>👥 <span id="ui-fans" style="color:#10b981; font-weight:bold;">0</span> Fans</div>
+            <div>📅 <span id="ui-date">01/2015</span></div>
+            <div class="time-controls">
+                <button class="speed-btn active" id="btn-s1" onclick="ubahKecepatan(1, this)">1x</button>
+                <button class="speed-btn" id="btn-s2" onclick="ubahKecepatan(2, this)">2x ($10k)</button>
+                <button class="speed-btn" id="btn-s3" onclick="ubahKecepatan(3, this)">3x ($25k)</button>
+            </div>
         </div>
-        <div class="hud-bottom">
-            <div class="hud-icon active" onclick="bukaLayar('dashboard')"><i class="fa-solid fa-building"></i><span>Kantor</span></div>
-            <div class="hud-icon" onclick="bukaModal('modal-riset')"><i class="fa-solid fa-microchip"></i><span>R&D</span></div>
-            <div class="hud-icon" onclick="bukaLayar('studio')"><i class="fa-solid fa-mobile-screen"></i><span>Buat HP</span></div>
-            <div class="hud-icon" onclick="bukaModal('modal-staff')"><i class="fa-solid fa-users"></i><span>Staf</span></div>
-            <div class="hud-icon" onclick="bukaModal('modal-marketing')"><i class="fa-solid fa-bullhorn"></i><span>Iklan</span></div>
-            <div class="hud-icon" style="color:#f5af19;" onclick="nextMonth()"><i class="fa-solid fa-forward-fast"></i><span>NEXT</span></div>
-        </div>
-    </div>
 
-    <!-- DASHBOARD -->
-    <div id="dashboard-screen" class="screen">
-        <div class="dash-card">
-            <h3>🏢 <span id="dash-compname">Perusahaan</span> (<span id="dash-flag">🏁</span>)</h3>
-            <p style="font-size:12px; color:#b0c4de;">Tingkat Kantor: Level 1</p>
-            <p style="font-size:12px; color:#ff5252; margin-top:4px;">Biaya Operasional: $<span id="dash-cost">15,000</span> / Bulan</p>
+        <div class="hud-bottom" id="global-hud-bot" style="display:none;">
+            <div class="hud-icon active" onclick="bukaLayar('dashboard')"><i class="fa-solid fa-building"><span> Kantor</span></i></div>
+            <div class="hud-icon" onclick="bukaModal('modal-riset')"><i class="fa-solid fa-microchip"><span> R&D</span></i></div>
+            <div class="hud-icon" onclick="bukaLayar('studio')"><i class="fa-solid fa-mobile-screen"><span> Studio</span></i></div>
+            <div class="hud-icon" onclick="bukaModal('modal-staff')"><i class="fa-solid fa-users"><span> Staf</span></i></div>
+            <div class="hud-icon" onclick="bukaModal('modal-marketing')"><i class="fa-solid fa-bullhorn"><span> Iklan</span></i></div>
         </div>
-        <div class="dash-card">
-            <h3>📈 Produk Aktif di Pasar</h3>
-            <div id="dash-product" style="font-size:13px; color:#ccc;">Belum ada HP yang dirilis.</div>
-        </div>
-        <h3 style="color:#fff; margin-bottom:8px; font-size:14px;">Riwayat Perusahaan</h3>
-        <div class="log-box" id="game-log">CEO, selamat datang! Rekrut staf, riset komponen, pasang iklan, dan buat HP terbaikmu. Tekan 'NEXT' untuk lanjut bulan!</div>
-    </div>
 
-    <!-- STUDIO -->
-    <div id="studio-screen" class="screen">
-        <div class="studio-container">
-            <div class="device-preview-box">
-                <div class="device-mockup" id="visual-hp">
-                    <div class="device-screen-inner" id="layar-hp"></div>
+        <!-- LAYAR DASHBOARD -->
+        <div id="dashboard-screen" class="screen">
+            <div class="dash-card">
+                <h3 id="dash-title">🏢 Perusahaan</h3>
+                <p style="font-size:11px; color:#94a3b8; margin-top:3px;">Biaya Operasional Bulanan: <span style="color:#ff5252;">$15,000</span></p>
+            </div>
+            <div class="dash-card">
+                <h3 style="color:#f5af19;">📱 Produk Aktif di Pasar</h3>
+                <div id="dash-product" style="font-size:12px; color:#ccc;">Belum ada perangkat yang dirilis.</div>
+            </div>
+            <h3 style="font-size:12px; margin-bottom:5px;">Aktivitas Perusahaan</h3>
+            <div class="log-box" id="game-log">Selamat datang CEO! Waktu berjalan otomatis. Poin Riset (RP) akan bertambah setiap kali produk HP Anda terjual ke pasaran.</div>
+        </div>
+
+        <!-- LAYAR STUDIO DESAIN -->
+        <div id="studio-screen" class="screen">
+            <div class="studio-grid">
+                <div class="studio-panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div id="visual-hp" style="width:90px; height:180px; background:linear-gradient(135deg, #ff758c, #ff7eb3); border-radius:15px; position:relative;">
+                        <div style="position:absolute; top:3%; left:3%; right:3%; bottom:3%; background:#000; border-radius:10px;"></div>
+                    </div>
+                    <p style="font-size:11px; color:#94a3b8; margin-top:15px;">Pratinjau Perangkat</p>
+                </div>
+                <div class="studio-panel">
+                    <h3 style="color:#f5af19; font-size:14px; margin-bottom:5px;">Perancangan Spesifikasi</h3>
+                    <label>Layar</label><select id="sel-screen"></select>
+                    <label>Prosesor (CPU)</label><select id="sel-cpu"></select>
+                    <label>RAM</label><select id="sel-ram"></select>
+                    <label>ROM (Penyimpanan)</label><select id="sel-rom"></select>
+                    <label>Kamera</label><select id="sel-cam"></select>
+                    <label>Baterai</label><select id="sel-bat"></select>
+                    <label>Speaker</label><select id="sel-spk"></select>
+                    <label>Nama Model HP</label><input type="text" id="input-phonename" value="Apex One">
+                    <label>Harga Jual ($)</label><input type="number" id="input-price" value="299">
+                    <button style="width:100%; margin-top:12px; background:#10b981; color:white; border:none; padding:10px; font-weight:bold; border-radius:5px; cursor:pointer;" onclick="produksiHP()">RILIS PERANGKAT ($500k)</button>
                 </div>
             </div>
-            <div class="studio-controls">
-                <h3 style="color:#f5af19; margin-bottom:10px; font-size:14px;">Rancang Bodi</h3>
-                <label>Tinggi & Lebar</label>
-                <div class="slider-group">
-                    <input type="range" id="sl-height" min="150" max="250" value="200" oninput="updateBentuk()">
-                    <input type="range" id="sl-width" min="80" max="140" value="100" oninput="updateBentuk()">
+        </div>
+
+        <!-- MODALS -->
+        <div id="modal-riset" class="modal">
+            <div class="modal-box">
+                <span style="position:absolute; top:10px; right:15px; color:#ff5252; cursor:pointer; font-weight:bold;" onclick="tutupModal('modal-riset')">✕</span>
+                <h3 style="color:#4facfe; margin-bottom:10px; font-size:15px;">Laboratorium Riset (R&D)</h3>
+                <div style="display:flex; gap:4px; overflow-x:auto; margin-bottom:10px;">
+                    <button class="btn-action" onclick="renderRiset('SCREEN', this)">Layar</button>
+                    <button class="btn-action" onclick="renderRiset('CPU', this)">CPU</button>
+                    <button class="btn-action" onclick="renderRiset('RAM', this)">RAM</button>
+                    <button class="btn-action" onclick="renderRiset('ROM', this)">ROM</button>
+                    <button class="btn-action" onclick="renderRiset('CAMERA', this)">Kamera</button>
+                    <button class="btn-action" onclick="renderRiset('BATTERY', this)">Baterai</button>
+                    <button class="btn-action" onclick="renderRiset('SPEAKER', this)">Speaker</button>
                 </div>
-                <label>Lengkungan Sudut</label>
-                <input type="range" id="sl-angle" min="0" max="30" value="15" style="width:100%;" oninput="updateBentuk()">
+                <div id="list-riset"></div>
+            </div>
+        </div>
 
-                <h3 style="color:#4facfe; margin-top:20px; margin-bottom:8px; font-size:14px;">Komponen Internal</h3>
-                <label>Jenis Layar</label> <select id="sel-screen"></select>
-                <label>Prosesor (CPU)</label> <select id="sel-cpu"></select>
-                <label>RAM Memory</label> <select id="sel-ram"></select>
-                <label>Penyimpanan (ROM)</label> <select id="sel-rom"></select>
-                <label>Kamera Utama</label> <select id="sel-cam"></select>
-                <label>Kapasitas Baterai</label> <select id="sel-bat"></select>
-                <label>Speaker Audio</label> <select id="sel-spk"></select>
+        <div id="modal-staff" class="modal">
+            <div class="modal-box">
+                <span style="position:absolute; top:10px; right:15px; color:#ff5252; cursor:pointer; font-weight:bold;" onclick="tutupModal('modal-staff')">✕</span>
+                <h3 style="color:#f5af19; margin-bottom:10px; font-size:15px;">Manajemen Staf</h3>
+                <div class="list-item"><div><strong>Engineer</strong><br><small>Gaji: $5k/bln</small></div><button class="btn-action" onclick="rekrutStaf('eng')">Rekrut ($10k)</button></div>
+                <div class="list-item"><div><strong>Desainer</strong><br><small>Gaji: $4k/bln</small></div><button class="btn-action" onclick="rekrutStaf('des')">Rekrut ($10k)</button></div>
+            </div>
+        </div>
 
-                <h3 style="color:#c084fc; margin-top:20px; margin-bottom:8px; font-size:14px;">Detail Rilis & Kemasan</h3>
-                <label>Desain Dus HP (Box)</label>
-                <select id="sel-box">
-                    <option value="2|1">Standar Putih (Biaya: $2/unit, Bonus Skor: +1)</option>
-                    <option value="5|3">Premium Hitam (Biaya: $5/unit, Bonus Skor: +3)</option>
-                    <option value="4|2">Eco-Friendly (Biaya: $4/unit, Bonus Skor: +2)</option>
-                    <option value="10|6">Exclusive Gold Box (Biaya: $10/unit, Bonus Skor: +6)</option>
-                </select>
-                
-                <h3 style="color:#10b981; margin-top:20px; margin-bottom:8px; font-size:14px;">Penetapan Harga</h3>
-                <label>Nama Model HP</label>
-                <input type="text" id="input-phonename" placeholder="Misal: Alpha Gen 1">
-                <label>Harga Jual ($)</label>
-                <input type="number" id="input-price" value="299">
+        <div id="modal-marketing" class="modal">
+            <div class="modal-box">
+                <span style="position:absolute; top:10px; right:15px; color:#ff5252; cursor:pointer; font-weight:bold;" onclick="tutupModal('modal-marketing')">✕</span>
+                <h3 style="color:#ff5252; margin-bottom:10px; font-size:15px;">Kampanye Iklan</h3>
+                <div class="list-item"><div><strong>Iklan Sosmed</strong><br><small>+15% Hype</small></div><button class="btn-action" onclick="beliIklan(30000, 15)">Bayar ($30k)</button></div>
+                <div class="list-item"><div><strong>Iklan TV Nasional</strong><br><small>+40% Hype</small></div><button class="btn-action" onclick="beliIklan(100000, 40)">Bayar ($100k)</button></div>
+            </div>
+        </div>
 
-                <button class="btn-publish" onclick="produksiHP()">PRODUKSI & RILIS</button>
+        <div id="modal-review" class="modal">
+            <div class="modal-box" style="text-align:center;">
+                <h3 style="color:#10b981;">🌟 Ulasan Produk Gadget</h3>
+                <h1 id="rev-score" style="font-size:50px; font-family:'Teko'; color:#f5af19; margin:10px 0;">8.5</h1>
+                <p id="rev-comment" style="font-size:12px; color:#94a3b8; font-style:italic; margin-bottom:15px;">"Sangat memuaskan!"</p>
+                <button class="start-btn" style="margin:0;" onclick="tutupModal('modal-review')">LANJUTKAN</button>
             </div>
         </div>
     </div>
-    <!-- MODALS -->
-    <div id="modal-riset" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-btn" onclick="tutupModal('modal-riset')">&times;</span>
-            <h2 style="color:#4facfe; margin-bottom:12px; font-size:18px;"><i class="fa-solid fa-flask"></i> Lab Riset</h2>
-            <div class="tab-riset-container">
-                <div class="tab-riset active" onclick="renderRiset('SCREEN', this)">Layar</div>
-                <div class="tab-riset" onclick="renderRiset('CPU', this)">CPU</div>
-                <div class="tab-riset" onclick="renderRiset('RAM', this)">RAM</div>
-                <div class="tab-riset" onclick="renderRiset('ROM', this)">ROM</div>
-                <div class="tab-riset" onclick="renderRiset('CAMERA', this)">Kamera</div>
-                <div class="tab-riset" onclick="renderRiset('BATTERY', this)">Baterai</div>
-                <div class="tab-riset" onclick="renderRiset('SPEAKER', this)">Speaker</div>
-            </div>
-            <div id="list-riset"></div>
-        </div>
-    </div>
 
-    <div id="modal-staff" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-btn" onclick="tutupModal('modal-staff')">&times;</span>
-            <h2 style="color:#f5af19; margin-bottom:10px; font-size:18px;"><i class="fa-solid fa-users"></i> Staf SDM</h2>
-            <p style="font-size:11px; color:#ccc; margin-bottom:12px;">Rekrut karyawan untuk bantuan operasional.</p>
-            <div class="list-item"><div><strong>Engineer (<span id="count-eng">0</span>)</strong><div style="font-size:10px; color:#aaa;">Gaji: $5k | +RP/bln</div></div><button class="btn-action" onclick="rekrutStaf('eng')">Rekrut ($10k)</button></div>
-            <div class="list-item"><div><strong>Desainer (<span id="count-des">0</span>)</strong><div style="font-size:10px; color:#aaa;">Gaji: $4k | +Kualitas</div></div><button class="btn-action" onclick="rekrutStaf('des')">Rekrut ($10k)</button></div>
-            <div class="list-item"><div><strong>Marketer (<span id="count-mar">0</span>)</strong><div style="font-size:10px; color:#aaa;">Gaji: $4k | +Hype</div></div><button class="btn-action" onclick="rekrutStaf('mar')">Rekrut ($10k)</button></div>
-        </div>
-    </div>
-
-    <div id="modal-marketing" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-btn" onclick="tutupModal('modal-marketing')">&times;</span>
-            <h2 style="color:#ff5252; margin-bottom:10px; font-size:18px;"><i class="fa-solid fa-bullhorn"></i> Marketing & Promo</h2>
-            <div class="list-item"><div><strong>Endorse Influencer</strong><br><span style="font-size:10px; color:#aaa;">+10% Hype</span></div><button class="btn-action" onclick="beliIklan(25000, 10)">Bayar ($25k)</button></div>
-            <div class="list-item"><div><strong>Iklan Sosmed</strong><br><span style="font-size:10px; color:#aaa;">+20% Hype</span></div><button class="btn-action" onclick="beliIklan(60000, 20)">Bayar ($60k)</button></div>
-            <div class="list-item"><div><strong>Iklan TV Nasional</strong><br><span style="font-size:10px; color:#aaa;">+40% Hype</span></div><button class="btn-action" onclick="beliIklan(150000, 40)">Bayar ($150k)</button></div>
-            <div class="list-item"><div><strong>Billboard Global</strong><br><span style="font-size:10px; color:#aaa;">+100% Hype</span></div><button class="btn-action" onclick="beliIklan(500000, 100)">Bayar ($500k)</button></div>
-        </div>
-    </div>
-
-    <div id="modal-review" class="modal-overlay">
-        <div class="modal-content" style="text-align:center; border-color:#10b981;">
-            <h2 style="color:#10b981; margin-bottom:8px; font-size:18px;">🌟 Ulasan Gadget</h2>
-            <p style="color:#ccc; font-size:13px;">Skor total dari spesifikasi, dus & harga:</p>
-            <h1 id="review-score-text" style="font-size:50px; margin:10px 0; font-family:'Teko'; color:#f5af19;">8.5</h1>
-            <p id="review-comment" style="font-style:italic; color:#4facfe; margin-bottom:20px; font-size:13px;">"Mantap!"</p>
-            <button class="btn-publish" onclick="tutupModal('modal-review')">LANJUTKAN</button>
-        </div>
-    </div>
-
+    <!-- SKRIP LOGIKA GAME -->
     <script>
         let game = {
             company: "", country: "Indonesia", flag: "🇮🇩",
-            money: 3000000, rp: 200, hype: 0, fans: 0,
-            month: 1, year: 2015, officeCost: 15000,
-            staff: { eng: 0, des: 0, mar: 0 },
-            activeProduct: null
+            money: 3000000, rp: 0, hype: 0, fans: 0,
+            month: 1, year: 2015, speed: 1, timer: null,
+            staff: { eng: 0, des: 0 }, activeProduct: null
         };
 
+        // DATABASE KOMPONEN (TERMASUK KAMERA, BATERAI 3000 MAH & SPEAKER AWAL)
         const techDb = [
-            // CPU
+            { id: 's1', type: 'SCREEN', name: 'Layar TFT Standar', cost: 10, rp: 0, year: 2015, unlocked: true, score: 4 },
+            { id: 's2', type: 'SCREEN', name: 'Layar IPS HD', cost: 25, rp: 80, year: 2016, unlocked: false, score: 12 },
             { id: 'c1', type: 'CPU', name: 'Prosesor 1.0 GHz', cost: 15, rp: 0, year: 2015, unlocked: true, score: 5 },
-            { id: 'c2', type: 'CPU', name: 'Dual-Core 1.5 GHz', cost: 30, rp: 80, year: 2015, unlocked: false, score: 10 },
-            { id: 'c3', type: 'CPU', name: 'Quad-Core 2.0 GHz', cost: 55, rp: 200, year: 2016, unlocked: false, score: 22 },
-            { id: 'c4', type: 'CPU', name: 'Octa-Core 2.5 GHz', cost: 95, rp: 450, year: 2017, unlocked: false, score: 35 },
-            { id: 'c5', type: 'CPU', name: 'AI Chipset 3.0 GHz', cost: 150, rp: 800, year: 2019, unlocked: false, score: 55 },
-            { id: 'c6', type: 'CPU', name: 'Ultra Bionic 3.2 GHz', cost: 220, rp: 1500, year: 2021, unlocked: false, score: 80 },
-            // RAM
+            { id: 'c2', type: 'CPU', name: 'Dual-Core 1.5 GHz', cost: 30, rp: 90, year: 2015, unlocked: false, score: 12 },
             { id: 'r1', type: 'RAM', name: '1 GB RAM', cost: 8, rp: 0, year: 2015, unlocked: true, score: 4 },
-            { id: 'r2', type: 'RAM', name: '2 GB RAM', cost: 15, rp: 50, year: 2015, unlocked: false, score: 8 },
-            { id: 'r3', type: 'RAM', name: '4 GB RAM', cost: 30, rp: 120, year: 2016, unlocked: false, score: 18 },
-            { id: 'r4', type: 'RAM', name: '8 GB RAM', cost: 60, rp: 300, year: 2018, unlocked: false, score: 35 },
-            { id: 'r5', type: 'RAM', name: '12 GB RAM', cost: 100, rp: 600, year: 2020, unlocked: false, score: 50 },
-            { id: 'r6', type: 'RAM', name: '16 GB Extreme RAM', cost: 150, rp: 1000, year: 2022, unlocked: false, score: 70 },
-            // ROM
+            { id: 'r2', type: 'RAM', name: '2 GB RAM', cost: 15, rp: 50, year: 2015, unlocked: false, score: 9 },
             { id: 'ro1', type: 'ROM', name: '8 GB Storage', cost: 5, rp: 0, year: 2015, unlocked: true, score: 3 },
-            { id: 'ro2', type: 'ROM', name: '16 GB Storage', cost: 12, rp: 40, year: 2015, unlocked: false, score: 6 },
-            { id: 'ro3', type: 'ROM', name: '32 GB Storage', cost: 22, rp: 100, year: 2016, unlocked: false, score: 14 },
-            { id: 'ro4', type: 'ROM', name: '64 GB Storage', cost: 40, rp: 220, year: 2017, unlocked: false, score: 25 },
-            { id: 'ro5', type: 'ROM', name: '128 GB Storage', cost: 70, rp: 400, year: 2018, unlocked: false, score: 40 },
-            { id: 'ro6', type: 'ROM', name: '256 GB Storage', cost: 120, rp: 700, year: 2020, unlocked: false, score: 55 },
-            { id: 'ro7', type: 'ROM', name: '512 GB Storage', cost: 200, rp: 1200, year: 2021, unlocked: false, score: 75 },
-            { id: 'ro8', type: 'ROM', name: '1 TB Storage', cost: 350, rp: 2000, year: 2023, unlocked: false, score: 100 },
-            // SCREEN
-            { id: 's1', type: 'SCREEN', name: 'TFT LCD Display', cost: 10, rp: 0, year: 2015, unlocked: true, score: 4 },
-            { id: 's2', type: 'SCREEN', name: 'IPS HD Display', cost: 25, rp: 100, year: 2016, unlocked: false, score: 12 },
-            { id: 's3', type: 'SCREEN', name: 'OLED Display', cost: 50, rp: 250, year: 2017, unlocked: false, score: 25 },
-            { id: 's4', type: 'SCREEN', name: 'AMOLED 90Hz', cost: 90, rp: 500, year: 2019, unlocked: false, score: 45 },
-            { id: 's5', type: 'SCREEN', name: 'Dynamic AMOLED 120Hz', cost: 140, rp: 900, year: 2021, unlocked: false, score: 70 },
-            // CAMERA
-            { id: 'ca1', type: 'CAMERA', name: '5 MP Single', cost: 5, rp: 0, year: 2015, unlocked: true, score: 3 },
-            { id: 'ca2', type: 'CAMERA', name: '12 MP AutoFocus', cost: 15, rp: 60, year: 2015, unlocked: false, score: 8 },
-            { id: 'ca3', type: 'CAMERA', name: '24 MP Dual-Cam', cost: 35, rp: 180, year: 2017, unlocked: false, score: 20 },
-            { id: 'ca4', type: 'CAMERA', name: '48 MP Triple-Cam', cost: 70, rp: 350, year: 2019, unlocked: false, score: 38 },
-            { id: 'ca5', type: 'CAMERA', name: '108 MP Quad-Cam', cost: 120, rp: 800, year: 2021, unlocked: false, score: 60 },
-            { id: 'ca6', type: 'CAMERA', name: '200 MP Pro AI', cost: 200, rp: 1500, year: 2023, unlocked: false, score: 90 },
-            // BATTERY
-            { id: 'b1', type: 'BATTERY', name: '1500 mAh', cost: 4, rp: 0, year: 2015, unlocked: true, score: 2 },
-            { id: 'b2', type: 'BATTERY', name: '2500 mAh', cost: 10, rp: 30, year: 2015, unlocked: false, score: 6 },
-            { id: 'b3', type: 'BATTERY', name: '3500 mAh FastCharge', cost: 18, rp: 90, year: 2016, unlocked: false, score: 14 },
-            { id: 'b4', type: 'BATTERY', name: '5000 mAh SuperCharge', cost: 35, rp: 200, year: 2018, unlocked: false, score: 25 },
-            { id: 'b5', type: 'BATTERY', name: '6000 mAh UltraPower', cost: 55, rp: 400, year: 2020, unlocked: false, score: 40 },
-            // SPEAKER
-            { id: 'sp1', type: 'SPEAKER', name: 'Mono Speaker', cost: 2, rp: 0, year: 2015, unlocked: true, score: 2 },
-            { id: 'sp2', type: 'SPEAKER', name: 'Stereo Speaker', cost: 8, rp: 50, year: 2016, unlocked: false, score: 7 },
-            { id: 'sp3', type: 'SPEAKER', name: 'Hi-Res Audio', cost: 18, rp: 150, year: 2018, unlocked: false, score: 15 },
-            { id: 'sp4', type: 'SPEAKER', name: 'Dolby Atmos Surround', cost: 35, rp: 300, year: 2020, unlocked: false, score: 28 }
+            { id: 'ro2', type: 'ROM', name: '16 GB Storage', cost: 12, rp: 40, year: 2015, unlocked: false, score: 7 },
+            { id: 'ca1', type: 'CAMERA', name: '8 MP Kamera Utama', cost: 10, rp: 0, year: 2015, unlocked: true, score: 5 },
+            { id: 'ca2', type: 'CAMERA', name: '16 MP Dual AI', cost: 25, rp: 100, year: 2016, unlocked: false, score: 15 },
+            { id: 'b1', type: 'BATTERY', name: '3000 mAh Standard', cost: 12, rp: 0, year: 2015, unlocked: true, score: 6 },
+            { id: 'b2', type: 'BATTERY', name: '4500 mAh FastCharge', cost: 24, rp: 120, year: 2016, unlocked: false, score: 18 },
+            { id: 'sp1', type: 'SPEAKER', name: 'Mono Speaker', cost: 3, rp: 0, year: 2015, unlocked: true, score: 3 },
+            { id: 'sp2', type: 'SPEAKER', name: 'Stereo Hi-Fi', cost: 10, rp: 70, year: 2016, unlocked: false, score: 10 }
         ];
 
         function pilihNegara(el, negara, bendera) {
@@ -290,17 +220,16 @@
 
         function mulaiGame() {
             let nama = document.getElementById('input-company').value;
-            if(nama.trim() === "") nama = "TechIndo";
+            if(!nama) nama = "Apex Tech";
             game.company = nama;
             
             document.getElementById('setup-screen').style.display = 'none';
-            document.getElementById('global-hud').style.display = 'block';
+            document.getElementById('global-hud').style.display = 'flex';
+            document.getElementById('global-hud-bot').style.display = 'flex';
             bukaLayar('dashboard');
             
-            document.getElementById('dash-compname').innerText = game.company;
-            document.getElementById('dash-flag').innerText = game.flag;
-            
-            renderUI(); renderStudioDropdowns();
+            renderUI(); renderStudioDropdowns(); renderRiset('SCREEN');
+            mulaiWaktuOtomatis();
         }
 
         function bukaLayar(target) {
@@ -317,138 +246,125 @@
 
         function renderUI() {
             document.getElementById('ui-money').innerText = "$" + game.money.toLocaleString();
-            document.getElementById('ui-rp').innerText = game.rp.toLocaleString();
+            document.getElementById('ui-rp').innerText = game.rp.toLocaleString() + " RP";
             document.getElementById('ui-hype').innerText = game.hype + "%";
             document.getElementById('ui-fans').innerText = game.fans.toLocaleString();
             
             let bln = game.month < 10 ? '0'+game.month : game.month;
             document.getElementById('ui-date').innerText = `${bln}/${game.year}`;
             
-            let totalCost = game.officeCost + (game.staff.eng*5000) + (game.staff.des*4000) + (game.staff.mar*4000);
-            document.getElementById('dash-cost').innerText = totalCost.toLocaleString();
-
             if(game.activeProduct) {
                 document.getElementById('dash-product').innerHTML = `
-                    <div style="font-size:15px; color:#f5af19; font-weight:bold;">📱 ${game.activeProduct.name}</div>
-                    <div style="font-size:12px; color:#ccc;">Harga Jual: $${game.activeProduct.price} | Skor: ${game.activeProduct.reviewScore}/10</div>
-                    <div style="font-size:12px; color:#10b981;">Total Terjual: ${game.activeProduct.sold.toLocaleString()} unit</div>
+                    <strong style="color:#f5af19;">📱 ${game.activeProduct.name}</strong><br>
+                    Terjual: <span style="color:#10b981;">${game.activeProduct.sold.toLocaleString()} unit</span>
                 `;
             }
         }
 
         function catatLog(teks) {
-            let logBox = document.getElementById('game-log');
-            logBox.innerHTML += `<br>[${game.month}/${game.year}] ${teks}`;
-            logBox.scrollTop = logBox.scrollHeight;
+            let log = document.getElementById('game-log');
+            log.innerHTML += `<br>[${game.month}/${game.year}] ${teks}`;
+            log.scrollTop = log.scrollHeight;
         }
 
-        function nextMonth() {
-            game.month++;
-            if(game.month > 12) { game.month = 1; game.year++; }
+        // WAKTU OTOMATIS & KECEPATAN (1x, 2x, 3x)
+        function ubahKecepatan(spd, btn) {
+            if(spd === 2 && game.money < 10000) { alert("Butuh $10,000 untuk kecepatan 2x!"); return; }
+            if(spd === 3 && game.money < 25000) { alert("Butuh $25,000 untuk kecepatan 3x!"); return; }
             
-            let totalCost = game.officeCost + (game.staff.eng*5000) + (game.staff.des*4000) + (game.staff.mar*4000);
-            game.money -= totalCost;
-            
-            let rpGain = 20 + (game.staff.eng * 10);
-            game.rp += rpGain;
-            
-            let hypeDecay = 15 - (game.staff.mar * 2); 
-            if(hypeDecay < 5) hypeDecay = 5; 
-            game.hype = Math.floor(game.hype * (1 - (hypeDecay/100))); 
-            
-            let salesMsg = "";
-            if(game.activeProduct) {
-                game.activeProduct.age++;
-                let decay = Math.max(0, 1 - (game.activeProduct.age * 0.10)); // Usia lebih awet di V4
-                
-                // Formula penjualan lebih realistis dengan fan base
-                let baseDemand = (game.activeProduct.reviewScore * 1200) + (game.fans * 3) + (game.hype * 30);
-                let unitSold = Math.floor(baseDemand * decay);
-                
-                if(unitSold > 0) {
-                    let revenue = unitSold * game.activeProduct.price;
-                    game.money += revenue;
-                    game.activeProduct.sold += unitSold;
-                    game.fans += Math.floor(unitSold / 80);
-                    salesMsg = `| Laporan "${game.activeProduct.name}": Terjual ${unitSold.toLocaleString()} unit.`;
-                }
-            }
-            
-            catatLog(`Operasional: -$${totalCost.toLocaleString()} ${salesMsg}`);
-            
-            if(game.money < 0) {
-                alert("GAME OVER: Saldo minus, perusahaan bangkrut!");
-                location.reload();
-            }
+            if(spd === 2) game.money -= 10000;
+            if(spd === 3) game.money -= 25000;
+
+            game.speed = spd;
+            document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            mulaiWaktuOtomatis();
             renderUI();
+        }
+
+        function mulaiWaktuOtomatis() {
+            if(game.timer) clearInterval(game.timer);
+            let intervalMs = 3000 / game.speed; // Makin tinggi speed, makin cepat waktu
+            
+            game.timer = setInterval(() => {
+                game.month++;
+                if(game.month > 12) { game.month = 1; game.year++; }
+                
+                let cost = 15000 + (game.staff.eng * 5000) + (game.staff.des * 4000);
+                game.money -= cost;
+                
+                if(game.hype > 0) game.hype = Math.max(0, game.hype - 10);
+
+                // PENJUALAN PRODUK & POIN RISET (RP DIDAPAT SAAT JUALAN)
+                if(game.activeProduct) {
+                    game.activeProduct.age++;
+                    let demand = (game.activeProduct.score * 500) + (game.fans * 2) + (game.hype * 15);
+                    let soldNow = Math.floor(demand * Math.max(0, 1 - (game.activeProduct.age * 0.1)));
+                    
+                    if(soldNow > 0) {
+                        let revenue = soldNow * game.activeProduct.price;
+                        game.money += revenue;
+                        game.activeProduct.sold += soldNow;
+                        game.fans += Math.floor(soldNow / 100);
+                        
+                        // RP DIDAPATKAN BERDASARKAN PENJUALAN HP
+                        let rpEarned = Math.floor(soldNow / 2000) + 5;
+                        game.rp += rpEarned;
+                        
+                        catatLog(`Penjualan "${game.activeProduct.name}": +${soldNow} unit (Dapat +${rpEarned} RP)`);
+                    }
+                }
+
+                if(game.money < 0) {
+                    alert("GAME OVER: Perusahaan Bangkrut!");
+                    location.reload();
+                }
+                renderUI();
+            }, intervalMs);
         }
 
         function rekrutStaf(tipe) {
             if(game.money >= 10000) {
-                game.money -= 10000;
-                game.staff[tipe]++;
-                document.getElementById('count-' + tipe).innerText = game.staff[tipe];
-                catatLog("Berhasil merekrut staf baru.");
-                renderUI();
-            } else { alert("Uang tidak cukup ($10,000)!"); }
+                game.money -= 10000; game.staff[tipe]++;
+                catatLog("Staf baru direkrut."); renderUI();
+            } else { alert("Uang kurang!"); }
         }
 
-        function beliIklan(harga, hypeBonus) {
+        function beliIklan(harga, hypeVal) {
             if(game.money >= harga) {
-                game.money -= harga;
-                game.hype += hypeBonus;
-                if(game.hype > 1000) game.hype = 1000;
-                catatLog(`Promo aktif! Hype naik +${hypeBonus}%`);
+                game.money -= harga; game.hype += hypeVal;
+                catatLog(`Iklan aktif! Hype naik +${hypeVal}%`);
                 renderUI(); tutupModal('modal-marketing');
-            } else { alert("Uang tidak cukup untuk promo ini!"); }
+            } else { alert("Uang kurang!"); }
         }
 
-        let currentRisetCategory = 'SCREEN';
+        // R&D LAB
         function renderRiset(kategori, elBtn) {
-            if(elBtn) {
-                document.querySelectorAll('.tab-riset').forEach(b => b.classList.remove('active'));
-                elBtn.classList.add('active');
-                currentRisetCategory = kategori;
-            }
             let list = document.getElementById('list-riset');
             list.innerHTML = "";
-            techDb.filter(t => t.type === currentRisetCategory).forEach(t => {
+            techDb.filter(t => t.type === kategori).forEach(t => {
                 if(!t.unlocked) {
-                    let isLocked = game.year < t.year;
+                    let locked = game.year < t.year;
                     list.innerHTML += `
                     <div class="list-item">
-                        <div><strong>${t.name}</strong><div style="font-size:10px; color:#aaa;">Skor Gadget: +${t.score}</div></div>
-                        <button class="btn-action" ${isLocked ? 'disabled' : ''} onclick="beliRiset('${t.id}', ${t.rp})">
-                            ${isLocked ? 'Thn ' + t.year : 'Riset (' + t.rp + ' RP)'}
-                        </button>
+                        <div><strong>${t.name}</strong><br><small>Skor: +${t.score} | Syarat: Thn ${t.year}</small></div>
+                        <button class="btn-action" ${locked ? 'disabled' : ''} onclick="beliRiset('${t.id}', ${t.rp})">${locked ? 'Tunggu' : 'Riset ('+t.rp+' RP)'}</button>
                     </div>`;
                 } else {
-                    list.innerHTML += `<div class="list-item" style="border-color:#10b981;"><div><strong style="color:#10b981;">${t.name} (Telah Dimiliki)</strong></div></div>`;
+                    list.innerHTML += `<div class="list-item" style="border-color:#10b981;"><div><strong style="color:#10b981;">${t.name} (Dimiliki)</strong></div></div>`;
                 }
             });
         }
 
-        function beliRiset(id, rpCost) {
-            if(game.rp >= rpCost) {
-                game.rp -= rpCost;
+        function beliRiset(id, cost) {
+            if(game.rp >= cost) {
+                game.rp -= cost;
                 let item = techDb.find(t => t.id === id);
                 item.unlocked = true;
-                catatLog(`Riset ${item.name} berhasil diselesaikan!`);
-                renderRiset(currentRisetCategory, null);
-                renderStudioDropdowns();
-                renderUI();
-            } else { alert("Poin Riset (RP) kurang! Lewati bulan untuk dapat RP."); }
-        }
-
-        function updateBentuk() {
-            let h = document.getElementById('sl-height').value;
-            let w = document.getElementById('sl-width').value;
-            let a = document.getElementById('sl-angle').value;
-            let hp = document.getElementById('visual-hp');
-            hp.style.width = w + 'px';
-            hp.style.height = h + 'px';
-            hp.style.borderRadius = a + 'px';
-            document.getElementById('layar-hp').style.borderRadius = (a > 4 ? a-4 : 0) + 'px';
+                catatLog(`Riset ${item.name} selesai!`);
+                renderStudioDropdowns(); renderUI();
+                renderRiset(item.type);
+            } else { alert("Poin Riset (RP) kurang! Jual lebih banyak HP untuk dapat RP."); }
         }
 
         function renderStudioDropdowns() {
@@ -466,72 +382,37 @@
         function produksiHP() {
             let nama = document.getElementById('input-phonename').value;
             let price = parseInt(document.getElementById('input-price').value);
-            if(!nama) { alert("Beri nama HP Anda!"); return; }
-            if(price < 50) { alert("Harga jual minimal $50!"); return; }
+            if(!nama) { alert("Beri nama HP!"); return; }
             if(game.money < 500000) { alert("Modal pabrik butuh $500,000!"); return; }
-            
-            let selectedIds = [
-                document.getElementById('sel-screen').value,
-                document.getElementById('sel-cpu').value,
-                document.getElementById('sel-ram').value,
-                document.getElementById('sel-rom').value,
-                document.getElementById('sel-cam').value,
-                document.getElementById('sel-bat').value,
+
+            let ids = [
+                document.getElementById('sel-screen').value, document.getElementById('sel-cpu').value,
+                document.getElementById('sel-ram').value, document.getElementById('sel-rom').value,
+                document.getElementById('sel-cam').value, document.getElementById('sel-bat').value,
                 document.getElementById('sel-spk').value
             ];
-            
-            let totalProdCost = 0;
+
             let totalScore = 0;
-            
-            selectedIds.forEach(id => {
-                let tech = techDb.find(t => t.id === id);
-                if(tech) {
-                    totalScore += tech.score;
-                    totalProdCost += tech.cost;
-                }
+            ids.forEach(id => {
+                let t = techDb.find(x => x.id === id);
+                if(t) totalScore += t.score;
             });
-            
-            // Perhitungan Harga Dus (Box)
-            let boxData = document.getElementById('sel-box').value.split('|');
-            let boxCost = parseInt(boxData[0]);
-            let boxScore = parseInt(boxData[1]);
-            
-            totalProdCost += boxCost;
-            totalScore += boxScore;
-            totalScore += (game.staff.des * 4); // Bonus desainer
+            totalScore += (game.staff.des * 5);
 
-            // Formula Skor Ketat (Kualitas vs Harga Jual)
-            let finalScore = ((totalScore / (price / 80)) * 1.5) + (game.hype / 150);
-            if(finalScore > 10) finalScore = 10.0;
-            if(finalScore < 1.0) finalScore = 1.0;
-            finalScore = parseFloat(finalScore).toFixed(1);
-            
+            let score = ((totalScore / (price / 70)) * 1.2) + (game.hype / 200);
+            if(score > 10) score = 10; if(score < 1) score = 1;
+            score = parseFloat(score).toFixed(1);
+
             game.money -= 500000;
-            game.activeProduct = { name: nama, price: price, reviewScore: finalScore, age: 0, sold: 0 };
-            
-            catatLog(`Merilis lini HP "${nama}" dengan Dus Premium!`);
-            document.getElementById('review-score-text').innerText = finalScore;
-            
-            let komen = "";
-            if(finalScore >= 9) komen = `"Luar Biasa! Ini adalah penemuan abad ini. Sempurna!"`;
-            else if(finalScore >= 7) komen = `"HP yang sangat bagus dengan harga masuk akal."`;
-            else if(finalScore >= 5) komen = `"Biasa saja. Tidak ada yang istimewa dari spesifikasinya."`;
-            else komen = `"Sangat buruk. Harga terlalu mahal untuk spek serendah ini."`;
-            
-            document.getElementById('review-comment').innerText = komen;
-            bukaModal('modal-review');
-            
-            document.getElementById('input-phonename').value = "";
-            renderUI();
-            bukaLayar('dashboard');
-        }
+            game.activeProduct = { name: nama, price: price, score: totalScore, reviewScore: score, age: 0, sold: 0 };
 
-        // INIT
-        updateBentuk();
-        renderRiset('SCREEN', document.querySelector('.tab-riset'));
+            document.getElementById('rev-score').innerText = score + " / 10";
+            bukaModal('modal-review');
+            catatLog(`Meluncurkan lini baru: ${nama} (Skor: ${score})`);
+            renderUI(); bukaLayar('dashboard');
+        }
     </script>
 </body>
 </html>
-
 
 
